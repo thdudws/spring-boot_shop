@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.thymeleaf.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +30,6 @@ public class OrderService {
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
     private final ItemImgRepository itemImgRepository;
-    private final OrderedHiddenHttpMethodFilter orderedHiddenHttpMethodFilter;
 
     public Long order(OrderDto orderDto, String email) {
         Item item = itemRepository.findById(orderDto.getItemId()) //주문할 상품 조회
@@ -69,6 +69,27 @@ public class OrderService {
         }
         //페이지 구현 객체 생성 반환
         return new PageImpl<>(orderHistDtos, pageable, totoalCount);
+    }
+
+    @Transactional(readOnly = true)
+    //주문 취소 시 본인이 맞는지 검증
+    public boolean validateOrder(Long orderId, String email) {
+        Member curMember = memberRepository.findByEmail(email);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(()-> new EntityNotFoundException());
+        Member savedMember = order.getMember();
+
+        if(!StringUtils.equals(curMember.getEmail(), savedMember.getEmail())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public void cancelOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(()-> new EntityNotFoundException());
+        order.cancelOrder(); //주문 취소 상태 변경시 트랜잭션 끝날 때 update 쿼리 실행
     }
 
 }

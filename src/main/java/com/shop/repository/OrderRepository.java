@@ -18,7 +18,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     * */
 
     @Query("select o from Order o " +
-            "where o.member.email =: email " +
+            "where o.member.email = :email " +
             "order by o.orderDate desc "
     )
     //현재 로그인한 사용자 주문 데이터를 페이징 조건에 맞춰 조회
@@ -31,7 +31,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     * */
 
     @Query("select count(o) from Order o " +
-            "where o.member.email =: email"
+            "where o.member.email = :email"
     )
     Long countOrders(@Param("email") String email); //로그인한 회원의 주문 개수 확인
 
